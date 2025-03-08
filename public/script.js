@@ -59,16 +59,25 @@ const spo2Gauge = new JustGage({
     counter: true
 });
 
-// Initialize Leaflet map with a default location (e.g., New York)
-const defaultLatLng = [40.7128, -74.0060]; // New York coordinates for testing
-const map = L.map('map').setView(defaultLatLng, 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-}).addTo(map);
-
-// Add a default marker
-let marker = L.marker(defaultLatLng).addTo(map);
-marker.bindPopup('Default Location: New York').openPopup();
+// Initialize Leaflet map with a default location
+let map, marker;
+const defaultLatLng = [40.7128, -74.0060]; // New York as default
+try {
+    map = L.map('map', {
+        center: defaultLatLng,
+        zoom: 13,
+        zoomControl: true
+    });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+    marker = L.marker(defaultLatLng).addTo(map);
+    marker.bindPopup('Default Location: New York').openPopup();
+    console.log('Leaflet map initialized successfully');
+} catch (error) {
+    console.error('Failed to initialize Leaflet map:', error);
+    document.getElementById('map-error').style.display = 'block';
+}
 
 // WebSocket connection
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -116,12 +125,16 @@ ws.onmessage = async (event) => {
         // Update map with GPS data
         if (data.latitude !== undefined && data.longitude !== undefined) {
             const latlng = [data.latitude, data.longitude];
-            marker.setLatLng(latlng);
-            marker.bindPopup(`Current Location: Lat ${data.latitude}, Lon ${data.longitude}`).openPopup();
-            map.setView(latlng, 13);
-            console.log('Map updated to:', latlng);
+            if (marker) {
+                marker.setLatLng(latlng);
+                marker.bindPopup(`Current Location: Lat ${data.latitude}, Lon ${data.longitude}`).openPopup();
+                map.setView(latlng, 13);
+                console.log('Map updated to:', latlng);
+            } else {
+                console.error('Marker not initialized; map may have failed to load');
+            }
         } else {
-            console.log('No valid GPS data received');
+            console.log('No valid GPS data received in this message');
         }
     } catch (error) {
         console.error('Failed to parse JSON:', error, 'Raw message:', message);

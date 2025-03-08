@@ -44,6 +44,13 @@ h1 {
     width: 100%;
     border-radius: 8px;
     border: 1px solid #ddd;
+    position: relative;
+    overflow: hidden;
+}
+
+#map-error {
+    line-height: 400px;
+    margin: 0;
 }
 
 .alert {
