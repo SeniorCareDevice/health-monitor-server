@@ -11,9 +11,9 @@ const temperatureGauge = new JustGage({
     customSectors: {
         percents: true,
         ranges: [
-            { from: 20, to: 35, color: '#28a745' }, // Green
-            { from: 35, to: 38, color: '#fd7e14' }, // Orange
-            { from: 38, to: 45, color: '#dc3545' }  // Red
+            { from: 20, to: 35, color: '#28a745' },
+            { from: 35, to: 38, color: '#fd7e14' },
+            { from: 38, to: 45, color: '#dc3545' }
         ]
     },
     counter: true
@@ -31,9 +31,9 @@ const heartRateGauge = new JustGage({
     customSectors: {
         percents: true,
         ranges: [
-            { from: 0, to: 60, color: '#dc3545' },  // Red
-            { from: 60, to: 100, color: '#28a745' }, // Green
-            { from: 100, to: 200, color: '#fd7e14' } // Orange
+            { from: 0, to: 60, color: '#dc3545' },
+            { from: 60, to: 100, color: '#28a745' },
+            { from: 100, to: 200, color: '#fd7e14' }
         ]
     },
     counter: true
@@ -51,24 +51,24 @@ const spo2Gauge = new JustGage({
     customSectors: {
         percents: true,
         ranges: [
-            { from: 0, to: 90, color: '#dc3545' },  // Red
-            { from: 90, to: 95, color: '#fd7e14' }, // Orange
-            { from: 95, to: 100, color: '#28a745' } // Green
+            { from: 0, to: 90, color: '#dc3545' },
+            { from: 90, to: 95, color: '#fd7e14' },
+            { from: 95, to: 100, color: '#28a745' }
         ]
     },
     counter: true
 });
 
-// Initialize Leaflet map
-const map = L.map('map', {
-    center: [0, 0],
-    zoom: 2,
-    zoomControl: true
-});
+// Initialize Leaflet map with a default location (e.g., New York)
+const defaultLatLng = [40.7128, -74.0060]; // New York coordinates for testing
+const map = L.map('map').setView(defaultLatLng, 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);
-let marker = null; // Marker starts as null
+
+// Add a default marker
+let marker = L.marker(defaultLatLng).addTo(map);
+marker.bindPopup('Default Location: New York').openPopup();
 
 // WebSocket connection
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -116,14 +116,12 @@ ws.onmessage = async (event) => {
         // Update map with GPS data
         if (data.latitude !== undefined && data.longitude !== undefined) {
             const latlng = [data.latitude, data.longitude];
-            if (!marker) {
-                marker = L.marker(latlng).addTo(map);
-                marker.bindPopup('Current Location').openPopup();
-            } else {
-                marker.setLatLng(latlng);
-            }
+            marker.setLatLng(latlng);
+            marker.bindPopup(`Current Location: Lat ${data.latitude}, Lon ${data.longitude}`).openPopup();
             map.setView(latlng, 13);
             console.log('Map updated to:', latlng);
+        } else {
+            console.log('No valid GPS data received');
         }
     } catch (error) {
         console.error('Failed to parse JSON:', error, 'Raw message:', message);
