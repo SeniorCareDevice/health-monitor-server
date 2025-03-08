@@ -11,8 +11,8 @@ const gauge = new JustGage({
     customSectors: {
         ranges: [
             { from: -20, to: 0, color: "#3498db" },
-            { from: 0, to: 30, color: "#2ecc71" },
-            { from: 30, to: 50, color: "#e74c3c" }
+            { from: 0, to 30, color: "#2ecc71" },
+            { from: 30, to 50, color: "#e74c3c" }
         ]
     },
     counter: true
@@ -32,11 +32,15 @@ function initMap(lat, lng, gpsValid) {
         marker = L.marker([lat, lng]).addTo(map)
             .bindPopup('Current Location')
             .openPopup();
+    } else {
+        marker = L.marker([0, 0]).addTo(map)
+            .bindPopup('Default Location')
+            .openPopup();
     }
     console.log('Map initialized with:', { lat, lng, gpsValid });
 }
 
-// Initialize map with default coordinates (0, 0)
+// Initialize map with default coordinates
 initMap(0, 0, false);
 
 // WebSocket connection
@@ -74,9 +78,8 @@ ws.onmessage = async (event) => {
             document.getElementById('spo2').innerText = data.spo2.toFixed(0) + ' %';
         }
 
-        // Update acceleration (calculate magnitude if not provided)
+        // Update acceleration (simulated based on fall detection)
         if (data.fallDetected !== undefined) {
-            // Since acceleration isn't directly sent, use fall detection to simulate
             const accMag = data.fallDetected ? 30 : 9.8; // Example values
             document.getElementById('acc').innerText = accMag.toFixed(2) + ' m/s²';
         }
@@ -89,7 +92,7 @@ ws.onmessage = async (event) => {
 
         // Update GPS data
         if (data.latitude !== undefined && data.longitude !== undefined) {
-            const gpsValid = true; // Since latitude and longitude are present
+            const gpsValid = true;
             document.getElementById('lat').innerText = data.latitude.toFixed(6);
             document.getElementById('lng').innerText = data.longitude.toFixed(6);
             document.getElementById('gps').innerText = gpsValid ? 'Valid' : 'Waiting for fix';
@@ -117,7 +120,7 @@ ws.onerror = (error) => {
     document.getElementById('fall').parentElement.className = 'reading alert';
 };
 
-// Function to restart the map (called by the button)
+// Function to restart the map
 function restartMap() {
     const lat = parseFloat(document.getElementById('lat').innerText);
     const lng = parseFloat(document.getElementById('lng').innerText);
