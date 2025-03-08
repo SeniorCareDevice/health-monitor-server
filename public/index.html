@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Health Monitor</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Health Monitor</h1>
+        <div id="gauges" class="row">
+            <div class="col-md-4">
+                <div id="temperature-gauge"></div>
+            </div>
+            <div class="col-md-4">
+                <div id="heart-rate-gauge"></div>
+            </div>
+            <div class="col-md-4">
+                <div id="spo2-gauge"></div>
+            </div>
+        </div>
+        <div id="map" class="mt-4"></div>
+    </div>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/justgage/1.3.1/justgage.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
