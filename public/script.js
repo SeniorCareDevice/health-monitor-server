@@ -11,9 +11,9 @@ const temperatureGauge = new JustGage({
     customSectors: {
         percents: true,
         ranges: [
-            { from: 20, to: 35, color: '#00cc00' },
-            { from: 35, to: 38, color: '#ff9900' },
-            { from: 38, to: 45, color: '#ff0000' }
+            { from: 20, to: 35, color: '#28a745' }, // Green
+            { from: 35, to: 38, color: '#fd7e14' }, // Orange
+            { from: 38, to: 45, color: '#dc3545' }  // Red
         ]
     },
     counter: true
@@ -31,9 +31,9 @@ const heartRateGauge = new JustGage({
     customSectors: {
         percents: true,
         ranges: [
-            { from: 0, to: 60, color: '#ff0000' },
-            { from: 60, to: 100, color: '#00cc00' },
-            { from: 100, to: 200, color: '#ff9900' }
+            { from: 0, to: 60, color: '#dc3545' },  // Red
+            { from: 60, to: 100, color: '#28a745' }, // Green
+            { from: 100, to: 200, color: '#fd7e14' } // Orange
         ]
     },
     counter: true
@@ -51,20 +51,24 @@ const spo2Gauge = new JustGage({
     customSectors: {
         percents: true,
         ranges: [
-            { from: 0, to: 90, color: '#ff0000' },
-            { from: 90, to: 95, color: '#ff9900' },
-            { from: 95, to: 100, color: '#00cc00' }
+            { from: 0, to: 90, color: '#dc3545' },  // Red
+            { from: 90, to: 95, color: '#fd7e14' }, // Orange
+            { from: 95, to: 100, color: '#28a745' } // Green
         ]
     },
     counter: true
 });
 
 // Initialize Leaflet map
-const map = L.map('map').setView([0, 0], 2);
+const map = L.map('map', {
+    center: [0, 0],
+    zoom: 2,
+    zoomControl: true
+});
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);
-let marker = L.marker([0, 0]).addTo(map);
+let marker = null; // Marker starts as null
 
 // WebSocket connection
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -76,18 +80,17 @@ ws.onopen = () => {
 
 ws.onmessage = async (event) => {
     let message;
-    // Check if event.data is a Blob and convert it to text
     if (event.data instanceof Blob) {
-        message = await event.data.text(); // Convert Blob to text
+        message = await event.data.text();
     } else {
-        message = event.data; // Assume it’s already a string
+        message = event.data;
     }
 
     try {
-        const data = JSON.parse(message); // Parse the text as JSON
-        console.log('Parsed data:', data); // Log for debugging
+        const data = JSON.parse(message);
+        console.log('Received data:', data);
 
-        // Update gauges if data exists
+        // Update gauges
         if (data.temperature !== undefined) {
             temperatureGauge.refresh(data.temperature);
         }
@@ -98,23 +101,29 @@ ws.onmessage = async (event) => {
             spo2Gauge.refresh(data.spo2);
         }
 
-        // Update fall detection status
+        // Update fall detection
         const fallStatus = document.getElementById('fall-status');
         if (data.fallDetected !== undefined) {
             if (data.fallDetected) {
                 fallStatus.textContent = 'Fall Detected!';
-                fallStatus.className = 'alert alert-danger';
+                fallStatus.className = 'alert alert-danger text-center mb-0';
             } else {
                 fallStatus.textContent = 'No Fall Detected';
-                fallStatus.className = 'alert alert-success';
+                fallStatus.className = 'alert alert-success text-center mb-0';
             }
         }
 
-        // Update map if GPS data is valid
+        // Update map with GPS data
         if (data.latitude !== undefined && data.longitude !== undefined) {
             const latlng = [data.latitude, data.longitude];
-            marker.setLatLng(latlng);
+            if (!marker) {
+                marker = L.marker(latlng).addTo(map);
+                marker.bindPopup('Current Location').openPopup();
+            } else {
+                marker.setLatLng(latlng);
+            }
             map.setView(latlng, 13);
+            console.log('Map updated to:', latlng);
         }
     } catch (error) {
         console.error('Failed to parse JSON:', error, 'Raw message:', message);
@@ -124,11 +133,11 @@ ws.onmessage = async (event) => {
 ws.onclose = () => {
     console.log('WebSocket disconnected');
     document.getElementById('fall-status').textContent = 'WebSocket Disconnected';
-    document.getElementById('fall-status').className = 'alert alert-warning';
+    document.getElementById('fall-status').className = 'alert alert-warning text-center mb-0';
 };
 
 ws.onerror = (error) => {
     console.error('WebSocket error:', error);
     document.getElementById('fall-status').textContent = 'WebSocket Error';
-    document.getElementById('fall-status').className = 'alert alert-danger';
+    document.getElementById('fall-status').className = 'alert alert-danger text-center mb-0';
 };
