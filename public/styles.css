@@ -1,61 +1,81 @@
 body {
-    font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
-    min-height: 100vh;
-    padding-bottom: 30px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, #e0eafc, #cfdef3);
+    margin: 0;
+    padding: 20px;
+    color: #333;
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 800px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 h1 {
-    font-size: 2.5rem;
+    text-align: center;
     color: #2c3e50;
-    font-weight: 700;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
 }
 
-.card {
-    background: #fff;
-    border: none;
-    border-radius: 12px;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+.reading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    margin: 10px 0;
+    background: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.card-title {
-    font-size: 1.25rem;
+.reading label {
+    font-weight: bold;
     color: #34495e;
-    margin-bottom: 15px;
 }
 
-.gauges {
-    padding: 10px;
+.reading span {
+    font-size: 1.1em;
+    color: #2980b9;
 }
 
-.gauge {
-    width: 100%;
-    height: 180px;
+.alert span {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+#temp-gauge {
+    width: 200px;
+    height: 160px;
     margin: 0 auto;
 }
 
-.map-container {
-    height: 400px;
+#map {
+    height: 300px;
     width: 100%;
+    margin-top: 20px;
     border-radius: 8px;
-    border: 1px solid #ddd;
-    position: relative;
-    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-#map-error {
-    line-height: 400px;
-    margin: 0;
+.button-container {
+    text-align: center;
+    margin-top: 10px;
 }
 
-.alert {
-    font-size: 1.1rem;
-    padding: 12px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
+button {
+    padding: 10px 20px;
+    background: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+button:hover {
+    background: #2980b9;
 }

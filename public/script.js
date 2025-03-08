@@ -1,83 +1,43 @@
-// Initialize JustGage meters
-const temperatureGauge = new JustGage({
-    id: 'temperature-gauge',
+// Initialize JustGage for temperature
+const gauge = new JustGage({
+    id: "temp-gauge",
     value: 0,
-    min: 20,
-    max: 45,
-    title: 'Temperature',
-    label: '°C',
+    min: -20,
+    max: 50,
+    title: "Temperature (°C)",
+    label: "°C",
     decimals: 2,
     gaugeWidthScale: 0.6,
     customSectors: {
-        percents: true,
         ranges: [
-            { from: 20, to: 35, color: '#28a745' },
-            { from: 35, to: 38, color: '#fd7e14' },
-            { from: 38, to: 45, color: '#dc3545' }
+            { from: -20, to: 0, color: "#3498db" },
+            { from: 0, to: 30, color: "#2ecc71" },
+            { from: 30, to: 50, color: "#e74c3c" }
         ]
     },
     counter: true
 });
 
-const heartRateGauge = new JustGage({
-    id: 'heart-rate-gauge',
-    value: 0,
-    min: 0,
-    max: 200,
-    title: 'Heart Rate',
-    label: 'BPM',
-    decimals: 0,
-    gaugeWidthScale: 0.6,
-    customSectors: {
-        percents: true,
-        ranges: [
-            { from: 0, to: 60, color: '#dc3545' },
-            { from: 60, to: 100, color: '#28a745' },
-            { from: 100, to: 200, color: '#fd7e14' }
-        ]
-    },
-    counter: true
-});
-
-const spo2Gauge = new JustGage({
-    id: 'spo2-gauge',
-    value: 0,
-    min: 0,
-    max: 100,
-    title: 'SpO2',
-    label: '%',
-    decimals: 0,
-    gaugeWidthScale: 0.6,
-    customSectors: {
-        percents: true,
-        ranges: [
-            { from: 0, to: 90, color: '#dc3545' },
-            { from: 90, to: 95, color: '#fd7e14' },
-            { from: 95, to: 100, color: '#28a745' }
-        ]
-    },
-    counter: true
-});
-
-// Initialize Leaflet map with a default location
+// Initialize Leaflet map
 let map, marker;
-const defaultLatLng = [40.7128, -74.0060]; // New York as default
-try {
-    map = L.map('map', {
-        center: defaultLatLng,
-        zoom: 13,
-        zoomControl: true
-    });
+function initMap(lat, lng, gpsValid) {
+    if (map) {
+        map.remove(); // Remove existing map instance
+    }
+    map = L.map('map').setView([gpsValid ? lat : 0, gpsValid ? lng : 0], gpsValid ? 13 : 1);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
-    marker = L.marker(defaultLatLng).addTo(map);
-    marker.bindPopup('Default Location: New York').openPopup();
-    console.log('Leaflet map initialized successfully');
-} catch (error) {
-    console.error('Failed to initialize Leaflet map:', error);
-    document.getElementById('map-error').style.display = 'block';
+    if (gpsValid) {
+        marker = L.marker([lat, lng]).addTo(map)
+            .bindPopup('Current Location')
+            .openPopup();
+    }
+    console.log('Map initialized with:', { lat, lng, gpsValid });
 }
+
+// Initialize map with default coordinates (0, 0)
+initMap(0, 0, false);
 
 // WebSocket connection
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -99,42 +59,46 @@ ws.onmessage = async (event) => {
         const data = JSON.parse(message);
         console.log('Received data:', data);
 
-        // Update gauges
+        // Update temperature gauge
         if (data.temperature !== undefined) {
-            temperatureGauge.refresh(data.temperature);
+            gauge.refresh(data.temperature);
         }
+
+        // Update heart rate
         if (data.heartRate !== undefined) {
-            heartRateGauge.refresh(data.heartRate);
+            document.getElementById('heart-rate').innerText = data.heartRate.toFixed(0) + ' BPM';
         }
+
+        // Update SpO2
         if (data.spo2 !== undefined) {
-            spo2Gauge.refresh(data.spo2);
+            document.getElementById('spo2').innerText = data.spo2.toFixed(0) + ' %';
         }
 
-        // Update fall detection
-        const fallStatus = document.getElementById('fall-status');
+        // Update acceleration (calculate magnitude if not provided)
         if (data.fallDetected !== undefined) {
-            if (data.fallDetected) {
-                fallStatus.textContent = 'Fall Detected!';
-                fallStatus.className = 'alert alert-danger text-center mb-0';
-            } else {
-                fallStatus.textContent = 'No Fall Detected';
-                fallStatus.className = 'alert alert-success text-center mb-0';
-            }
+            // Since acceleration isn't directly sent, use fall detection to simulate
+            const accMag = data.fallDetected ? 30 : 9.8; // Example values
+            document.getElementById('acc').innerText = accMag.toFixed(2) + ' m/s²';
         }
 
-        // Update map with GPS data
+        // Update fall status
+        if (data.fallDetected !== undefined) {
+            document.getElementById('fall').innerText = data.fallDetected ? 'FALL DETECTED' : 'Normal';
+            document.getElementById('fall').parentElement.className = 'reading' + (data.fallDetected ? ' alert' : '');
+        }
+
+        // Update GPS data
         if (data.latitude !== undefined && data.longitude !== undefined) {
-            const latlng = [data.latitude, data.longitude];
-            if (marker) {
-                marker.setLatLng(latlng);
-                marker.bindPopup(`Current Location: Lat ${data.latitude}, Lon ${data.longitude}`).openPopup();
-                map.setView(latlng, 13);
-                console.log('Map updated to:', latlng);
-            } else {
-                console.error('Marker not initialized; map may have failed to load');
-            }
+            const gpsValid = true; // Since latitude and longitude are present
+            document.getElementById('lat').innerText = data.latitude.toFixed(6);
+            document.getElementById('lng').innerText = data.longitude.toFixed(6);
+            document.getElementById('gps').innerText = gpsValid ? 'Valid' : 'Waiting for fix';
+            initMap(data.latitude, data.longitude, gpsValid);
         } else {
-            console.log('No valid GPS data received in this message');
+            document.getElementById('lat').innerText = '0';
+            document.getElementById('lng').innerText = '0';
+            document.getElementById('gps').innerText = 'Waiting for fix';
+            console.log('No valid GPS data received');
         }
     } catch (error) {
         console.error('Failed to parse JSON:', error, 'Raw message:', message);
@@ -143,12 +107,20 @@ ws.onmessage = async (event) => {
 
 ws.onclose = () => {
     console.log('WebSocket disconnected');
-    document.getElementById('fall-status').textContent = 'WebSocket Disconnected';
-    document.getElementById('fall-status').className = 'alert alert-warning text-center mb-0';
+    document.getElementById('fall').innerText = 'WebSocket Disconnected';
+    document.getElementById('fall').parentElement.className = 'reading alert';
 };
 
 ws.onerror = (error) => {
     console.error('WebSocket error:', error);
-    document.getElementById('fall-status').textContent = 'WebSocket Error';
-    document.getElementById('fall-status').className = 'alert alert-danger text-center mb-0';
+    document.getElementById('fall').innerText = 'WebSocket Error';
+    document.getElementById('fall').parentElement.className = 'reading alert';
 };
+
+// Function to restart the map (called by the button)
+function restartMap() {
+    const lat = parseFloat(document.getElementById('lat').innerText);
+    const lng = parseFloat(document.getElementById('lng').innerText);
+    const gpsValid = document.getElementById('gps').innerText === 'Valid';
+    initMap(lat, lng, gpsValid);
+}
